@@ -31,6 +31,7 @@ use \oemodulenameoxorder_parent;
 use \oxAttribute;
 use \oxRegistry;
 use oxUtilsObject;
+use \oxTestModules;
 
 class modOxUtilsObject_oxUtilsObject extends \oxUtilsObject
 {
@@ -206,6 +207,10 @@ class UtilsobjectTest extends \OxidTestCase
 
     public function testOxNewCreationOfNonExistingClass()
     {
+        $exception = $this->getMock('oxSystemComponentException', ['debugOut']);
+        $exception->expects($this->any())->method('debugOut');
+        oxTestModules::addModuleObject('oxSystemComponentException', $exception);
+
         $this->setExpectedException('oxSystemComponentException', 'EXCEPTION_SYSTEMCOMPONENT_CLASSNOTFOUND');
 
         oxNew("non_existing_class");

@@ -102,6 +102,10 @@ class FunctionsTest extends \OxidTestCase
 
     public function testOxNew()
     {
+        $exception = $this->getMock('oxSystemComponentException', ['debugOut']);
+        $exception->expects($this->any())->method('debugOut');
+        oxTestModules::addModuleObject('oxSystemComponentException', $exception);
+
         $oNew = oxNew('oxArticle');
         $this->assertTrue($oNew instanceof \OxidEsales\EshopCommunity\Application\Model\Article);
 
