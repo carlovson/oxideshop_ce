@@ -470,14 +470,14 @@ class SystemRequirementsTest extends \OxidTestCase
             array('5.3.25', 0),
             array('5.4', 0),
             array('5.4.2', 0),
-            array('5.5.50', 0),
+            array('5.5.50', 1),
             array('5.6.0', 2),
             array('5.6.27', 2),
             array('7.0.0', 2),
             array('7.0.8-0ubuntu0.16.04.3', 2),
             array('7.0.12-2ubuntu2', 2),
-            array('7.1.0', 0),
-            array('7.1.22', 0),
+            array('7.1.0', 1),
+            array('7.1.22', 1),
         );
     }
 

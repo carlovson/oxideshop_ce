@@ -146,7 +146,7 @@ class SystemRequirements
     );
 
     /**
-     * Returns PHP consntant PHP_INT_SIZE
+     * Returns PHP constant PHP_INT_SIZE
      *
      * @deprecated since v6.0 (2016-11-08); Function checkBug53632() is not used any more.
      *
@@ -597,7 +597,7 @@ class SystemRequirements
      * PHP4 compatibility mode must be set off:
      * zend.ze1_compatibility_mode = Off
      *
-     * @deprecated since v6.0 (2016-11-08); Zend is not neccessary any more.
+     * @deprecated since v6.0 (2016-11-08); Zend is not necessary any more.
      *
      * @return integer
      */
@@ -615,15 +615,41 @@ class SystemRequirements
      */
     public function checkPhpVersion()
     {
-        $phpMinimalVersion = '5.6.0';
-        $phpMaximalVersion = '7.0.9999';
+        $iModStat = null;
+
+        /**
+         * This is the minimal PHP version the shop needs to run at all.
+         * If a server does not meet this minimum requirement the OXID eShop will definitely not run and the setup
+         * will not continue.
+         */
+        $minimalRequiredVersion = '5.5.0';
+
+        /** Only recommended versions are tested and supported by OXID eSales */
+        $minimalRecommendedVersion = '5.6.0';
+        $maximalRecommendedVersion = '7.0.9999';
 
         $installedPhpVersion = $this->getPhpVersion();
-        $iModStat = 0;
-        if (version_compare($installedPhpVersion, $phpMinimalVersion, '>=')
-            && version_compare($installedPhpVersion, $phpMaximalVersion, '<=')) {
+
+        /**
+         * Setup will NOT continue for PHP versions smaller than the minimal required version,
+         * as OXID eShop will definitely not work
+         */
+        if (version_compare($installedPhpVersion, $minimalRequiredVersion, '<')) {
+            $iModStat = 0;
+        }
+        /** If the installed PHP version is withing the recommended versions 2 (green) will be returned */
+        if (version_compare($installedPhpVersion, $minimalRecommendedVersion, '>=')
+            && version_compare($installedPhpVersion, $maximalRecommendedVersion, '<=')) {
             $iModStat = 2;
         }
+        /**
+         * If neither of the former conditions apply, a warning will be issued:
+         * OXID eShop MAY work, but the installed PHP version is neither recommended nor supported.
+         */
+        if (is_null($iModStat)) {
+            $iModStat = 1;
+        }
+
         return $iModStat;
     }
 
