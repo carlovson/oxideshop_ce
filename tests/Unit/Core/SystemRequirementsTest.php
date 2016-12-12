@@ -111,11 +111,11 @@ class SystemRequirementsTest extends \OxidTestCase
             // version 5.6.* is not allowed
             [
                 'version'        => '5.6.0',
-                'expectedResult' => 0
+                'expectedResult' => 1
             ],
             [
                 'version'        => '5.6.30-0ubuntu0.14.04.1',
-                'expectedResult' => 0
+                'expectedResult' => 1
             ],
             // version 5.7.* is allowed
             [

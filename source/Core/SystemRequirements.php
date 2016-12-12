@@ -760,7 +760,7 @@ class SystemRequirements
     }
 
     /**
-     * Checks if current mysql version matches requirements ( >=5 )
+     * Checks if current mysql version matches requirements
      *
      * @param string $sVersion MySQL version
      *
@@ -769,7 +769,7 @@ class SystemRequirements
     public function checkMysqlVersion($sVersion = null)
     {
         $minimalRequiredVersion = '5.5.0';
-        /** All versions of 5.6 are disallowed. Please see comment below */
+        /** All versions of 5.6 are not recommended. Please see comment below */
         $maximalRequiredVersion = '5.7.9999';
 
         if ($sVersion === null) {
@@ -781,17 +781,17 @@ class SystemRequirements
         }
 
         $iModStat = 0;
-        if (version_compare($sVersion, $minimalRequiredVersion, '>=') && version_compare($sVersion, $maximalRequiredVersion, '<=')) {
-            $iModStat = 2;
-        }
-
         /**
-         * There is a bug in MySQL 5.6,* which under certain conditions affects OXID eShop Enterprise Edition and is not
-         * tested on OXID Ci.
+         * There is a bug in MySQL 5.6,* which under certain conditions affects OXID eShop Enterprise Edition.
+         * Version MySQL 5.6.* in neither recommended nor supported by OXID eSales.
          * See https://bugs.mysql.com/bug.php?id=79203
          */
         if (version_compare($sVersion, '5.6.0', '>=') && version_compare($sVersion, '5.7.0', '<')) {
-            $iModStat = 0;
+            $iModStat = 1;
+        }
+
+        if (! $iModStat && version_compare($sVersion, $minimalRequiredVersion, '>=') && version_compare($sVersion, $maximalRequiredVersion, '<=')) {
+            $iModStat = 2;
         }
 
         return $iModStat;
