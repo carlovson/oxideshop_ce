@@ -154,7 +154,7 @@ class SystemRequirementsTest extends \OxidTestCase
      */
     public function testGetReqInfoUrl()
     {
-        $sUrl = "http://oxidforge.org/system_requirements.html";
+        $sUrl = "http://oxidforge.org/en/installation.html";
         $systemRequirements = new \OxidEsales\Eshop\Core\SystemRequirements();
 
         $this->assertEquals($sUrl . "#PHP_version_at_least_5.6", $systemRequirements->getReqInfoUrl("php_version"));
@@ -505,8 +505,11 @@ class SystemRequirementsTest extends \OxidTestCase
     {
         $memoryLimitsWithExpectedSystemHealth = array(
             array('8M', 0),
-            array('14M', 1),
-            array('30M', 2),
+            array('31M', 0),
+            array('32M', 1),
+            array('59M', 1),
+            array('60M', 2),
+            array('61M', 2),
             array('-1', 2),
         );
 
