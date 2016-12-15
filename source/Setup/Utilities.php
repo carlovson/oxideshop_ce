@@ -264,6 +264,27 @@ class Utilities extends Core
     }
 
     /**
+     * Returns true if htaccess file can be updated by setup process.
+     *
+     * Functionality is tested via:
+     *   `Acceptance/Frontend/ShopSetUpTest.php::testInstallShopCantContinueDueToHtaccessProblem`
+     *
+     * @return bool
+     */
+    public function canHtaccessFileBeUpdated()
+    {
+        try {
+            $defaultPathParameters = $this->getDefaultPathParams();
+            $defaultPathParameters['sBaseUrlPath'] = $this->extractRewriteBase($defaultPathParameters['sShopURL']);
+            $this->updateHtaccessFile($defaultPathParameters);
+        } catch (Exception $exception) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Returns the value of an environment variable
      *
      * @param string $sVarName variable name

@@ -26,6 +26,8 @@ use Exception;
 use OxidEsales\Eshop\Core\ConfigFile;
 use OxidEsales\Eshop\Core\Registry;
 use OxidEsales\Eshop\Core\Edition\EditionSelector;
+use OxidEsales\Eshop\Core\SystemRequirements;
+use OxidEsales\EshopCommunity\Setup\Controller\ModuleStateMapGenerator;
 
 /**
  * Class holds scripts (controllers) needed to perform shop setup steps
@@ -48,55 +50,28 @@ class Controller extends Core
     /**
      * First page with system requirements check
      *
+     * Functionality is tested via:
+     *   `Acceptance/Frontend/ShopSetUpTest.php::testSystemRequirementsPageCanContinueWithSetup`
+     *   `Acceptance/Frontend/ShopSetUpTest.php::testSystemRequirementsPageShowsTranslatedModuleNames`
+     *   `Acceptance/Frontend/ShopSetUpTest.php::testSystemRequirementsPageShowsTranslatedModuleGroupNames`
+     *   `Acceptance/Frontend/ShopSetUpTest.php::testSystemRequirementsContainsProperModuleStateHtmlClassNames`
+     *   `Acceptance/Frontend/ShopSetUpTest.php::testInstallShopCantContinueDueToHtaccessProblem`
+     *
      * @return string
      */
     public function systemReq()
     {
-        $setup = $this->getSetupInstance();
-        $language = $this->getLanguageInstance();
-        $utils = $this->getUtilitiesInstance();
+        $systemRequirementsInfo = $this->getSystemRequirementsInfo();
+        $moduleStateMapGenerator = $this->getModuleStateMapGenerator($systemRequirementsInfo);
 
-        $continue = true;
-        $groupModuleInfo = array();
-
-        $htaccessUpdateError = false;
-        try {
-            $path = $utils->getDefaultPathParams();
-            $path['sBaseUrlPath'] = $utils->extractRewriteBase($path['sShopURL']);
-            //$oUtils->updateHtaccessFile( $aPath, "admin" );
-            $utils->updateHtaccessFile($path);
-        } catch (Exception $exception) {
-            //$oView->setMessage( $oExcp->getMessage() );
-            $htaccessUpdateError = true;
-        }
-
-        $systemRequirements = getSystemReqCheck();
-        $info = $systemRequirements->getSystemInfo();
-        foreach ($info as $groupName => $modules) {
-            // translating
-            $translatedGroupName = $language->getModuleName($groupName);
-            foreach ($modules as $moduleName => $moduleState) {
-                // translating
-                $continue = $continue && ( bool )abs($moduleState);
-
-                // was unable to update htaccess file for mod_rewrite check
-                if ($htaccessUpdateError && $moduleName == 'server_permissions') {
-                    $class = $setup->getModuleClass(0);
-                    $continue = false;
-                } else {
-                    $class = $setup->getModuleClass($moduleState);
-                }
-                $groupModuleInfo[$translatedGroupName][] = array('module' => $moduleName,
-                    'class' => $class,
-                    'modulename' => $language->getModuleName($moduleName));
-            }
-        }
+        $moduleStateMap = $moduleStateMapGenerator->getModuleStateMap();
+        $isSafeForSetupToContinue = SystemRequirements::canSetupContinue($systemRequirementsInfo);
 
         $this->setViewOptions(
             'STEP_0_TITLE',
             [
-                "blContinue" => $continue,
-                "aGroupModuleInfo" => $groupModuleInfo,
+                "blContinue" => $isSafeForSetupToContinue,
+                "aGroupModuleInfo" => $moduleStateMap,
                 "aLanguages" => getLanguages(),
                 "sLanguage" => $this->getSessionInstance()->getSessionParam('setup_lang'),
             ]
@@ -606,5 +581,80 @@ class Controller extends Core
         foreach ($viewOptions as $optionKey => $optionValue) {
             $view->setViewParam($optionKey, $optionValue);
         }
+    }
+
+    /**
+     * Getter for ModuleStateMapGenerator.
+     *
+     * Returns an instance of ModuleStateMapGenerator which has all necessary functions predefined:
+     *
+     *   - StateHtmlClassConverterFunction to convert module state to HTML class attribute for setup page;
+     *   - ModuleNameTranslateFunction to translate requirement module id to it's full name;
+     *   - ModuleGroupNameTranslateFunction to translate requirement module group id to it's full name.
+     *
+     * @param array $systemRequirementsInfo
+     *
+     * @return ModuleStateMapGenerator
+     */
+    private function getModuleStateMapGenerator($systemRequirementsInfo)
+    {
+        $setup = $this->getSetupInstance();
+        $language = $this->getLanguageInstance();
+
+        $moduleStateMapGenerator = new Controller\ModuleStateMapGenerator($systemRequirementsInfo);
+
+        $moduleStateMapGenerator->setModuleStateHtmlClassConvertFunction(function ($moduleState) use ($setup) {
+            return $setup->getModuleClass($moduleState);
+        });
+        $moduleStateMapGenerator->setModuleNameTranslateFunction(function ($moduleId) use ($language) {
+            return $language->getModuleName($moduleId);
+        });
+        $moduleStateMapGenerator->setModuleGroupNameTranslateFunction(function ($moduleGroupId) use ($language) {
+            return $language->getModuleName($moduleGroupId);
+        });
+
+        return $moduleStateMapGenerator;
+    }
+
+    /**
+     * @return array Filtered SystemRequirementsInfo array.
+     */
+    private function getSystemRequirementsInfo()
+    {
+        $systemRequirements = getSystemReqCheck();
+
+        return $this->updateSystemRequirementsInfoInCaseAreProblemsWithHtaccess(
+            $systemRequirements->getSystemInfo()
+        );
+    }
+
+    /**
+     * @param array $systemRequirementsInfo
+     * @return array
+     */
+    private function updateSystemRequirementsInfoInCaseAreProblemsWithHtaccess($systemRequirementsInfo)
+    {
+        return SystemRequirements::filter(
+            $systemRequirementsInfo,
+            function ($groupId, $moduleId, $moduleState) {
+                if (($groupId === SystemRequirements::MODULE_GROUP_ID_SERVER_CONFIG)
+                    && ($moduleId === SystemRequirements::MODULE_ID_MOD_REWRITE)
+                    && (!$this->canUpdateHtaccess())
+                ) {
+                    return SystemRequirements::MODULE_STATUS_BLOCKS_SETUP;
+                }
+
+                return $moduleState;
+            }
+        );
+    }
+
+    /**
+     * @return bool
+     */
+    private function canUpdateHtaccess()
+    {
+        $utilities = $this->getUtilitiesInstance();
+        return $utilities->canHtaccessFileBeUpdated();
     }
 }

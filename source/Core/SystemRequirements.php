@@ -33,6 +33,14 @@ use Exception;
  */
 class SystemRequirements
 {
+    const MODULE_STATUS_UNABLE_TO_DETECT = -1;
+    const MODULE_STATUS_BLOCKS_SETUP = 0;
+    const MODULE_STATUS_FITS_MINIMUM_REQUIREMENTS = 1;
+    const MODULE_STATUS_OK = 2;
+
+    const MODULE_GROUP_ID_SERVER_CONFIG = 'server_config';
+    const MODULE_ID_MOD_REWRITE = 'mod_rewrite';
+
     /**
      * System required modules
      *
@@ -1008,6 +1016,27 @@ class SystemRequirements
     }
 
     /**
+     * Apply given filter function to all iterations of SystemRequirementInfo.
+     *
+     * @param array    $systemRequirementsInfo
+     * @param \Closure $filterFunction         Filter function used for the update of actual values; Function will
+     *                                         receive the same arguments as provided from
+     *                                         `iterateThroughSystemRequirementsInfo` method.
+     *
+     * @return array
+     */
+    public static function filter($systemRequirementsInfo, $filterFunction)
+    {
+        $iterator = static::iterateThroughSystemRequirementsInfo($systemRequirementsInfo);
+
+        foreach ($iterator as list($groupId, $moduleId, $moduleState)) {
+            $systemRequirementsInfo[$groupId][$moduleId] = $filterFunction($groupId, $moduleId, $moduleState);
+        }
+
+        return $systemRequirementsInfo;
+    }
+
+    /**
      * Returns passed module state
      *
      * @param string $sModule module name to check
@@ -1022,6 +1051,44 @@ class SystemRequirements
             $iModStat = $this->$sCheckFunction();
 
             return $iModStat;
+        }
+    }
+
+    /**
+     * Returns true if given module state is acceptable for setup process to continue.
+     *
+     * @param array $systemRequirementsInfo
+     * @return bool
+     */
+    public static function canSetupContinue($systemRequirementsInfo)
+    {
+        $iterator = static::iterateThroughSystemRequirementsInfo($systemRequirementsInfo);
+
+        foreach ($iterator as list($groupId, $moduleId, $moduleState)) {
+            if ($moduleState === static::MODULE_STATUS_BLOCKS_SETUP) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Iterates through given SystemRequirementsInfo returning three items:
+     *
+     *   - GroupId
+     *   - ModuleId
+     *   - ModuleState
+     *
+     * @param array $systemRequirementsInfo
+     * @return \Generator
+     */
+    public static function iterateThroughSystemRequirementsInfo($systemRequirementsInfo)
+    {
+        foreach ($systemRequirementsInfo as $groupId => $modules) {
+            foreach ($modules as $moduleId => $moduleState) {
+                yield [$groupId, $moduleId, $moduleState];
+            }
         }
     }
 

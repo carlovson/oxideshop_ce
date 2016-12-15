@@ -34,6 +34,13 @@ class ShopSetUpTest extends FrontendTestCase
     /** @var int How much more time wait for these tests. */
     protected $_iWaitTimeMultiplier = 7;
 
+    protected function setUp()
+    {
+        parent::setUp();
+
+        $this->unhideHtaccessFile();
+    }
+
     /**
      * Regenerate views after test.
      */
@@ -43,6 +50,8 @@ class ShopSetUpTest extends FrontendTestCase
 
         $oServiceCaller = new ServiceCaller($this->getTestConfig());
         $oServiceCaller->callService('ViewsGenerator', 1);
+
+        $this->unhideHtaccessFile();
     }
 
     /**
@@ -213,6 +222,96 @@ class ShopSetUpTest extends FrontendTestCase
     }
 
     /**
+     * Test if System Requirements Page is displayed correctly when all the requirements are met.
+     *
+     * @group main
+     */
+    public function testSystemRequirementsPageCanContinueWithSetup()
+    {
+        $this->goToSetup();
+        $this->assertTextNotPresent(
+            "Your system does not fit system requirements",
+            "Setup should be able to continue, but system requirements page shows that it can't."
+        );
+        $this->assertElementPresent(
+            "//input[@type='submit' and @id='step0Submit']",
+            "Proceed with setup button is not available, but it should."
+        );
+    }
+
+    /**
+     * Test if System Requirements Page has requirement module names translated.
+     *
+     * @group main
+     */
+    public function testSystemRequirementsPageShowsTranslatedModuleNames()
+    {
+        $this->goToSetup();
+
+        $this->assertSame("LIB XML2", $this->getText("//li[@id='lib_xml2']"));
+        $this->assertSame("UTF-8 support", $this->getText("//li[@id='unicode_support']"));
+        $this->assertSame("Apache mod_rewrite module", $this->getText("//li[@id='mod_rewrite']"));
+    }
+
+    /**
+     * Test if System Requirements Page has requirement module group names translated.
+     *
+     * @group main
+     */
+    public function testSystemRequirementsPageShowsTranslatedModuleGroupNames()
+    {
+        $this->goToSetup();
+
+        $this->assertContains("PHP extensions", $this->getText("//li[@class='group'][1]"));
+        $this->assertContains("PHP configuration", $this->getText("//li[@class='group'][2]"));
+        $this->assertContains("Server configuration", $this->getText("//li[@class='group'][3]"));
+    }
+
+    /**
+     * Test if System Requirements Page has requirement module state html class names correctly converted.
+     *
+     * @group main
+     */
+    public function testSystemRequirementsContainsProperModuleStateHtmlClassNames()
+    {
+        $this->hideHtaccessFile();
+
+        $this->goToSetup();
+
+        $this->assertElementPresent("//li[@id='unicode_support' and @class='pass']");
+        $this->assertElementPresent("//li[@id='mod_rewrite' and @class='fail']");
+    }
+
+    /**
+     * Test htaccess exceptional case for system requirements in setup page
+     *
+     * @group main
+     */
+    public function testInstallShopCantContinueDueToHtaccessProblem()
+    {
+        $this->goToSetup();
+        $this->assertTextNotPresent(
+            "Your system does not fit system requirements",
+            "Setup should be able to continue, but system requirements page shows that it can't."
+        );
+        $this->assertElementPresent(
+            "//li[@id='mod_rewrite' and @class='pass']",
+            "Mod rewrite check does not have 'pass' class attribute, but it should."
+        );
+
+        $this->hideHtaccessFile();
+        $this->goToSetup();
+        $this->assertTextPresent(
+            "Your system does not fit system requirements",
+            "Setup should not be able to continue, but system requirements page shows that it can."
+        );
+        $this->assertElementPresent(
+            "//li[@id='mod_rewrite' and @class='fail']",
+            "Mod rewrite check does not have 'fail' class attribute, but it should."
+        );
+    }
+
+    /**
      * Check if shop automatically redirects to setup when you're trying to set it up for the first time
      */
     public function goToSetup()
@@ -273,5 +372,31 @@ class ShopSetUpTest extends FrontendTestCase
     protected function isPackage()
     {
         return file_exists($this->getTestConfig()->getShopPath() . '/pkg.info');
+    }
+
+    /**
+     * @return string
+     */
+    private function getHtaccessFilePath()
+    {
+        return $this->getTestConfig()->getShopPath() . DIRECTORY_SEPARATOR . '.htaccess';
+    }
+
+    private function hideHtaccessFile()
+    {
+        $htaccessPath = $this->getHtaccessFilePath();
+
+        if (file_exists($htaccessPath)) {
+            rename($htaccessPath, $htaccessPath . '_');
+        }
+    }
+
+    private function unhideHtaccessFile()
+    {
+        $htaccessPath = $this->getHtaccessFilePath();
+
+        if (file_exists($htaccessPath . '_')) {
+            rename($htaccessPath . '_', $htaccessPath);
+        }
     }
 }
