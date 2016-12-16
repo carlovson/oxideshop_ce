@@ -476,6 +476,7 @@ class FunctionalityInAdminTest extends AdminTestCase
      * checking if order info is displayed correctly
      *
      * @group adminFunctionality
+     * @group quarantine
      */
     public function testEditingOrdersProducts()
     {
@@ -965,6 +966,7 @@ class FunctionalityInAdminTest extends AdminTestCase
      * Core settings -> Settings -> Active Category at Start
      *
      * @group adminFunctionality
+     * @group quarantine
      */
     public function testActiveCategoryAtStart()
     {
@@ -1681,6 +1683,7 @@ class FunctionalityInAdminTest extends AdminTestCase
      * checking if switching themes works
      *
      * @group adminFunctionality
+     * @group quarantine
      */
     public function testConversionRateOptions()
     {
@@ -1721,6 +1724,7 @@ class FunctionalityInAdminTest extends AdminTestCase
      * checking if econda is loaded in frontend
      *
      * @group adminFunctionality
+     * @group quarantine
      *
      * @deprecated since v5.3 (2016-05-20); Dynpages will be removed.
      */
