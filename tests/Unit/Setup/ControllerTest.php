@@ -583,53 +583,51 @@ class ControllerTest extends \OxidTestCase
      */
     public function testDbCreateFailedEnDataInsert()
     {
-        $this->markTestSkipped("We will get rid of these tests.");
-
-        $oSetup = $this->getMock("Setup");
+        $setup = $this->getMock('Setup', array('setNextStep', 'getStep'));
 
         $sessionValues = [
-            "aDb" => [
-                "dbiDemoData" => 1
+            'aDb' => [
+                'dbiDemoData' => 1
             ],
-            "location_lang" => "en",
-            "blOverwrite" => 1
+            'location_lang' => 'en',
+            'blOverwrite' => 1
         ];
-        $oSession = $this->getMock('SetupSession', array("getSessionParam", "getSid"), array(), '', null);
-        $oSession->method("getSessionParam")->will($this->returnValueMap($sessionValues));
+        $session = $this->getMock('SetupSession', array('getSessionParam', 'getSid'), array(), '', null);
+        $session->method('getSessionParam')->will($this->returnValueMap($sessionValues));
 
-        $oView = $this->getMock("viewStub", array("setTitle", "setMessage"));
-        $oView->expects($this->once())->method("setTitle")->with($this->equalTo("STEP_4_2_TITLE"));
-        $oView->expects($this->once())->method("setMessage");
+        $view = $this->getMock('viewStub', array('setTitle', 'setMessage'));
+        $view->expects($this->once())->method('setTitle')->with($this->equalTo('STEP_4_2_TITLE'));
+        $view->expects($this->once())->method('setMessage');
 
-        $oUtils = $this->getMock("Utilities", array("getRequestVar"));
-        $oUtils->expects($this->once())->method("getRequestVar")->willReturn(true);
+        $utils = $this->getMock('Utilities', array('getRequestVar'));
+        $utils->expects($this->once())->method('getRequestVar')->willReturn(true);
 
-        $oLang = $this->getMock("Language", array("getText"));
+        $language = $this->getMock('Language', array('getText'));
 
-        $callback = function($filename) {
-            if (preg_match("@en.sql$@i", $filename)) {
+        $queryFileCallback = function($filename) {
+            if (preg_match('@en.sql$@i', $filename)) {
                 throw new Exception();
             } else {
                 return true;
             }
         };
 
-        $oDb = $this->getMock("databaseStub", array("openDatabase", "execSql", "queryFile", "testCreateView"));
-        $oDb->method("queryFile")->will($this->returnCallback($callback));
+        $database = $this->getMock('databaseStub', array('openDatabase', 'execSql', 'queryFile', 'testCreateView', 'saveShopSettings', 'writeAdminLoginData'));
+        $database->method('queryFile')->will($this->returnCallback($queryFileCallback));
 
         $map = [
-            ["Setup", $oSetup],
-            ["Session", $oSession],
-            ["Language", $oLang],
-            ["Utilities", $oUtils],
-            ["Database", $oDb]
+            ['Setup', $setup],
+            ['Session', $session],
+            ['Language', $language],
+            ['Utilities', $utils],
+            ['Database', $database]
         ];
 
-        $oController = $this->getMock(get_class($this->getController()), array("getView", "getInstance"));
-        $oController->method("getInstance")->will($this->returnValueMap($map));
-        $oController->method("getView")->will($this->returnValue($oView));
-        $this->assertEquals("default.php", $oController->dbCreate());
+        $controller = $this->getMock(get_class($this->getController()), array('getView', 'getInstance'));
+        $controller->method('getInstance')->will($this->returnValueMap($map));
+        $controller->method('getView')->will($this->returnValue($view));
 
+        $this->assertEquals('default.php', $controller->dbCreate());
     }
 
     /**
