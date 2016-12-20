@@ -22,6 +22,8 @@
 
 namespace OxidEsales\EshopCommunity\Setup;
 
+use \OxidEsales\EshopCommunity\Setup\Exception\SetupControllerExitException;
+
 /**
  * Chooses and executes controller action which must be executec to render expected view
  */
@@ -41,7 +43,13 @@ class Dispatcher extends Core
 
         $view = $oController->getView();
         $view->sendHeaders();
-        $view->display($oController->$sAction());
+
+        try {
+            $oController->$sAction();
+        } catch (SetupControllerExitException $exception) {
+        } finally {
+            $view->display();
+        }
     }
 
     /**

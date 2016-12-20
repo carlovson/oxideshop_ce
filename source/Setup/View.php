@@ -23,6 +23,7 @@
 namespace OxidEsales\EshopCommunity\Setup;
 
 use OxidEsales\Eshop\Core\Edition\EditionPathProvider;
+use OxidEsales\EshopCommunity\Setup\Exception\TemplateNotFoundException;
 
 /**
  * Setup View class
@@ -50,17 +51,41 @@ class View extends Core
      */
     protected $_aViewParams = array();
 
+    /** @var string */
+    private $templateFileName = 'default.php';
 
     /**
-     * Displayes current setup step template
+     * Defines name of template to be used in display method.
      *
-     * @param string $sTemplate name of template to display
+     * @param string $templateFileName
+     * @throws TemplateNotFoundException
      */
-    public function display($sTemplate)
+    public function setTemplateFileName($templateFileName)
+    {
+        if (!file_exists($this->getPathToTemplateFileName())) {
+            throw new TemplateNotFoundException($templateFileName);
+        }
+
+        $this->templateFileName = $templateFileName;
+    }
+
+    /**
+     * Displays current setup step template
+     */
+    public function display()
     {
         ob_start();
-        include "tpl/{$sTemplate}";
+        $templateFilePath = $this->getPathToTemplateFileName();
+        include $templateFilePath;
         ob_end_flush();
+    }
+
+    /**
+     * @return string
+     */
+    private function getPathToTemplateFileName()
+    {
+        return __DIR__ . DIRECTORY_SEPARATOR . "tpl" . DIRECTORY_SEPARATOR . $this->templateFileName;
     }
 
     /**

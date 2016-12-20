@@ -28,6 +28,7 @@ use OxidEsales\Eshop\Core\Registry;
 use OxidEsales\Eshop\Core\Edition\EditionSelector;
 use OxidEsales\Eshop\Core\SystemRequirements;
 use OxidEsales\EshopCommunity\Setup\Controller\ModuleStateMapGenerator;
+use OxidEsales\EshopCommunity\Setup\Exception\SetupControllerExitException;
 
 /**
  * Class holds scripts (controllers) needed to perform shop setup steps
@@ -56,8 +57,6 @@ class Controller extends Core
      *   `Acceptance/Frontend/ShopSetUpTest.php::testSystemRequirementsPageShowsTranslatedModuleGroupNames`
      *   `Acceptance/Frontend/ShopSetUpTest.php::testSystemRequirementsContainsProperModuleStateHtmlClassNames`
      *   `Acceptance/Frontend/ShopSetUpTest.php::testInstallShopCantContinueDueToHtaccessProblem`
-     *
-     * @return string
      */
     public function systemReq()
     {
@@ -68,6 +67,7 @@ class Controller extends Core
         $isSafeForSetupToContinue = SystemRequirements::canSetupContinue($systemRequirementsInfo);
 
         $this->setViewOptions(
+            'systemreq.php',
             'STEP_0_TITLE',
             [
                 "blContinue" => $isSafeForSetupToContinue,
@@ -76,14 +76,10 @@ class Controller extends Core
                 "sLanguage" => $this->getSessionInstance()->getSessionParam('setup_lang'),
             ]
         );
-
-        return "systemreq.php";
     }
 
     /**
      * Welcome page
-     *
-     * @return string
      */
     public function welcome()
     {
@@ -94,6 +90,7 @@ class Controller extends Core
         $this->getUtilitiesInstance()->setCookie("oxidadminlanguage", $adminLanguage, time() + 31536000, "/");
 
         $this->setViewOptions(
+            'welcome.php',
             'STEP_1_TITLE',
             [
                 "aCountries" => getCountryList(),
@@ -105,14 +102,10 @@ class Controller extends Core
                 "sCountryLang" => $session->getSessionParam('country_lang')
             ]
         );
-
-        return "welcome.php";
     }
 
     /**
      * License confirmation page
-     *
-     * @return string
      */
     public function license()
     {
@@ -120,19 +113,16 @@ class Controller extends Core
         $utils = $this->getUtilitiesInstance();
 
         $this->setViewOptions(
+            'license.php',
             'STEP_2_TITLE',
             [
                 "aLicenseText" => $utils->getLicenseContent($languageId)
             ]
         );
-
-        return "license.php";
     }
 
     /**
      * DB info entry page
-     *
-     * @return string
      */
     public function dbInfo()
     {
@@ -147,7 +137,7 @@ class Controller extends Core
             $setup->setNextStep($setup->getStep("STEP_WELCOME"));
             $view->setMessage($this->getLanguageInstance()->getText("ERROR_SETUP_CANCELLED"));
 
-            return "licenseerror.php";
+            throw new SetupControllerExitException("licenseerror.php");
         }
 
         $databaseConfigValues = $session->getSessionParam('aDB');
@@ -161,6 +151,7 @@ class Controller extends Core
         }
 
         $this->setViewOptions(
+            'dbinfo.php',
             'STEP_3_TITLE',
             [
                 "aDB" => $databaseConfigValues,
@@ -168,14 +159,10 @@ class Controller extends Core
                 "blUnicodeSupport" => $systemRequirements->getModuleInfo('unicode_support')
             ]
         );
-
-        return "dbinfo.php";
     }
 
     /**
      * Setup paths info entry page
-     *
-     * @return string
      */
     public function dirsInfo()
     {
@@ -187,6 +174,7 @@ class Controller extends Core
         }
 
         $this->setViewOptions(
+            'dirsinfo.php',
             'STEP_4_TITLE',
             [
                 "aAdminData" => $session->getSessionParam('aAdminData'),
@@ -194,14 +182,10 @@ class Controller extends Core
                 "aSetupConfig" => ["blDelSetupDir" => $setup->deleteSetupDirectory()],
             ]
         );
-
-        return "dirsinfo.php";
     }
 
     /**
      * Testing database connection
-     *
-     * @return string
      */
     public function dbConnect()
     {
@@ -220,7 +204,7 @@ class Controller extends Core
             $setup->setNextStep($setup->getStep('STEP_DB_INFO'));
             $view->setMessage($language->getText('ERROR_FILL_ALL_FIELDS'));
 
-            return "default.php";
+            throw new SetupControllerExitException();
         }
 
         try {
@@ -232,12 +216,12 @@ class Controller extends Core
                 $setup->setNextStep($setup->getStep('STEP_DB_INFO'));
                 $view->setMessage($language->getText('ERROR_DB_CONNECT') . " - " . $exception->getMessage());
 
-                return "default.php";
+                throw new SetupControllerExitException();
             } elseif ($exception->getCode() === Database::ERROR_MYSQL_VERSION_DOES_NOT_FIT_REQUIREMENTS) {
                 $setup->setNextStep($setup->getStep('STEP_DB_INFO'));
                 $view->setMessage($exception->getMessage());
 
-                return "default.php";
+                throw new SetupControllerExitException();
             } else {
                 try {
                     // if database is not there, try to create it
@@ -246,7 +230,7 @@ class Controller extends Core
                     $setup->setNextStep($setup->getStep('STEP_DB_INFO'));
                     $view->setMessage($exception->getMessage());
 
-                    return "default.php";
+                    throw new SetupControllerExitException();
                 }
                 $view->setViewParam("blCreated", 1);
             }
@@ -257,18 +241,17 @@ class Controller extends Core
         // check if DB is already UP and running
         if (!$this->databaseCanBeOverwritten($database)) {
             $this->formMessageIfDBCanBeOverwritten($databaseConfigValues['dbName'], $view, $language, $session->getSid(), $setup->getStep('STEP_DIRS_INFO'));
-            return "default.php";
+
+            throw new SetupControllerExitException();
         }
 
         $setup->setNextStep($setup->getStep('STEP_DIRS_INFO'));
 
-        return "dbconnect.php";
+        $this->view->setTemplateFileName("dbconnect.php");
     }
 
     /**
      * Creating database
-     *
-     * @return string
      */
     public function dbCreate()
     {
@@ -292,13 +275,14 @@ class Controller extends Core
             $view->setMessage($exception->getMessage());
             $setup->setNextStep($setup->getStep('STEP_DB_INFO'));
 
-            return "default.php";
+            throw new SetupControllerExitException();
         }
 
         // check if DB is already UP and running
         if (!$this->databaseCanBeOverwritten($database)) {
             $this->formMessageIfDBCanBeOverwritten($databaseConfigValues['dbName'], $view, $language, $session->getSid(), $setup->getStep('STEP_DB_CREATE'));
-            return "default.php";
+
+            throw new SetupControllerExitException();
         }
 
         try {
@@ -312,14 +296,14 @@ class Controller extends Core
                 // there where problems with queries
                 $view->setMessage($language->getText('ERROR_BAD_DEMODATA') . "<br><br>" . $exception->getMessage());
 
-                return "default.php";
+                throw new SetupControllerExitException();
             }
 
             $this->getUtilitiesInstance()->regenerateViews();
         } catch (Exception $exception) {
             $view->setMessage($exception->getMessage());
 
-            return "default.php";
+            throw new SetupControllerExitException();
         }
 
         $editionSqlDir = $this->getUtilitiesInstance()->getSqlDirectory();
@@ -334,19 +318,15 @@ class Controller extends Core
         } catch (Exception $exception) {
             $view->setMessage($exception->getMessage());
 
-            return "default.php";
+            throw new SetupControllerExitException();
         }
 
         $view->setMessage($language->getText('STEP_4_2_UPDATING_DATABASE'));
         $this->onDirsWriteSetStep($setup);
-
-        return "default.php";
     }
 
     /**
      * Writing config info
-     *
-     * @return string
      */
     public function dirsWrite()
     {
@@ -386,7 +366,7 @@ class Controller extends Core
             $setup->setNextStep($setup->getStep('STEP_DIRS_INFO'));
             $view->setMessage($language->getText('ERROR_FILL_ALL_FIELDS'));
 
-            return "default.php";
+            throw new SetupControllerExitException();
         }
 
         // check if passwords match
@@ -394,7 +374,7 @@ class Controller extends Core
             $setup->setNextStep($setup->getStep('STEP_DIRS_INFO'));
             $view->setMessage($language->getText('ERROR_PASSWORD_TOO_SHORT'));
 
-            return "default.php";
+            throw new SetupControllerExitException();
         }
 
         // check if passwords match
@@ -402,7 +382,7 @@ class Controller extends Core
             $setup->setNextStep($setup->getStep('STEP_DIRS_INFO'));
             $view->setMessage($language->getText('ERROR_PASSWORDS_DO_NOT_MATCH'));
 
-            return "default.php";
+            throw new SetupControllerExitException();
         }
 
         // check if email matches pattern
@@ -410,7 +390,7 @@ class Controller extends Core
             $setup->setNextStep($setup->getStep('STEP_DIRS_INFO'));
             $view->setMessage($language->getText('ERROR_USER_NAME_DOES_NOT_MATCH_PATTERN'));
 
-            return "default.php";
+            throw new SetupControllerExitException();
         }
 
         // write it now
@@ -429,7 +409,7 @@ class Controller extends Core
             $setup->setNextStep($setup->getStep('STEP_DIRS_INFO'));
             $view->setMessage($exception->getMessage());
 
-            return "default.php";
+            throw new SetupControllerExitException();
         }
 
         $view->setMessage($language->getText('STEP_4_1_DATA_WAS_WRITTEN'));
@@ -439,14 +419,10 @@ class Controller extends Core
         $databaseConfigValues = $session->getSessionParam('aDB');
         $view->setViewParam("aDB", $databaseConfigValues);
         $setup->setNextStep($setup->getStep('STEP_DB_CREATE'));
-
-        return "default.php";
     }
 
     /**
      * Final setup step
-     *
-     * @return string
      */
     public function finish()
     {
@@ -454,6 +430,7 @@ class Controller extends Core
         $pathCollection = $session->getSessionParam("aPath");
 
         $this->setViewOptions(
+            'finish.php',
             'STEP_6_TITLE',
             [
                 "aPath" => $pathCollection,
@@ -461,8 +438,6 @@ class Controller extends Core
                 "blWritableConfig" => is_writable($pathCollection['sShopDir'] . "/config.inc.php")
             ]
         );
-
-        return "finish.php";
     }
 
     // END: Controllers
@@ -570,12 +545,14 @@ class Controller extends Core
     }
 
     /**
+     * @param string $templateFileName
      * @param string $title
      * @param array  $viewOptions
      */
-    private function setViewOptions($title, $viewOptions)
+    private function setViewOptions($templateFileName, $title, $viewOptions)
     {
         $view = $this->getView();
+        $view->setTemplateFileName($templateFileName);
         $view->setTitle($title);
 
         foreach ($viewOptions as $optionKey => $optionValue) {
