@@ -1181,7 +1181,7 @@ class UtilsTest extends \OxidTestCase
         $this->assertEquals($sCompare, $oUtils->getPreviewId());
     }
 
-    /*
+    /**
      * @group quarantine
      */
     public function testHandlePageNotFoundError()
