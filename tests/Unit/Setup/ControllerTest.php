@@ -666,66 +666,6 @@ class ControllerTest extends \OxidTestCase
     }
 
     /**
-     * Testing controller::dbCreate()
-     *
-     * @group quarantine
-     *
-     * @return null
-     */
-    public function testDbCreate()
-    {
-        $this->markTestSkipped("We will get rid of these tests.");
-
-        $oSetup = $this->getMock("Setup", array("setNextStep", "getStep"));
-        $oSetup->expects($this->once())->method("setNextStep");
-
-        if ($this->getTestConfig()->getShopEdition() !== 'CE') {
-            $oSetup->expects($this->once())->method("getStep")->with($this->equalTo("STEP_SERIAL"));
-        }
-
-        if ($this->getTestConfig()->getShopEdition() === 'CE') {
-            $oSetup->expects($this->once())->method("getStep")->with($this->equalTo("STEP_FINISH"));
-        }
-
-        $oSession = $this->getMock('SetupSession', array("getSessionParam"), array(), '', null);
-        $oSession->expects($this->at(0))->method("getSessionParam")->with($this->equalTo("aDB"))->will($this->returnValue(array("dbiDemoData" => 1)));
-        $oSession->expects($this->at(1))->method("getSessionParam")->with($this->equalTo("location_lang"))->will($this->returnValue("en"));
-
-        $oSessionToCheckIfUserDecideToOverwriteDB = $this->getMock('SetupSession', array("getSessionParam"), array(), '', null);
-        $oSessionToCheckIfUserDecideToOverwriteDB->expects($this->atLeastOnce())->method("getSessionParam")->with($this->equalTo("blOverwrite"));
-
-        $oView = $this->getMock("viewStub", array("setTitle", "setMessage"));
-        $oView->expects($this->once())->method("setTitle")->with($this->equalTo("STEP_4_2_TITLE"));
-        $oView->expects($this->once())->method("setMessage");
-
-        $oUtils = $this->getMock("Utilities", array("getRequestVar"));
-        $oUtils->expects($this->once())->method("getRequestVar");
-
-        $oLang = $this->getMock("Language", array("getText"));
-        $oLang->expects($this->atLeastOnce())->method("getText");
-
-        $oDb = $this->getMock("databaseStub", array("openDatabase", "execSql", "queryFile", "saveShopSettings", "testCreateView", "writeAdminLoginData"));
-        $oDb->expects($this->at(0))->method("openDatabase");
-        $oDb->expects($this->at(1))->method("testCreateView");
-        $oDb->expects($this->at(2))->method("execSql")->will($this->throwException(new Exception));
-        $oDb->expects($this->at(4))->method("queryFile");
-        $oDb->expects($this->at(5))->method("queryFile");
-        $oDb->expects($this->at(6))->method("saveShopSettings");
-        $oDb->expects($this->at(7))->method("queryFile");
-        $oDb->expects($this->at(10))->method("writeAdminLoginData");
-
-        $oController = $this->getMock(get_class($this->getController()), array("getView", "getInstance"));
-        $oController->expects($this->at(0))->method("getInstance")->with($this->equalTo("Setup"))->will($this->returnValue($oSetup));
-        $oController->expects($this->at(1))->method("getInstance")->with($this->equalTo("Session"))->will($this->returnValue($oSession));
-        $oController->expects($this->at(2))->method("getInstance")->with($this->equalTo("Language"))->will($this->returnValue($oLang));
-        $oController->expects($this->at(3))->method("getView")->will($this->returnValue($oView));
-        $oController->expects($this->at(4))->method("getInstance")->with($this->equalTo("Database"))->will($this->returnValue($oDb));
-        $oController->expects($this->at(5))->method("getInstance")->with($this->equalTo("Utilities"))->will($this->returnValue($oUtils));
-        $oController->expects($this->at(6))->method("getInstance")->with($this->equalTo("Session"))->will($this->returnValue($oSessionToCheckIfUserDecideToOverwriteDB));
-        $this->assertEquals("default.php", $oController->dbCreate());
-    }
-
-    /**
      * Testing controller::finish()
      *
      * @return null
