@@ -708,6 +708,7 @@ class FunctionalityInAdminTest extends AdminTestCase
      * Service -> Product Export
      *
      * @group adminFunctionality
+     * @group quarantine
      */
     public function testProductExport()
     {
