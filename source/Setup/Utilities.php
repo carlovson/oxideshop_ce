@@ -187,6 +187,10 @@ class Utilities extends Core
 
         $oLang = $this->getInstance("Language");
 
+        if (!file_exists($sConfPath)) {
+            throw new Exception(sprintf($oLang->getText('ERROR_COULD_NOT_OPEN_CONFIG_FILE'), $sConfPath));
+        }
+
         clearstatcache();
         @chmod($sConfPath, getDefaultFileMode());
         if (($fp = fopen($sConfPath, "r"))) {
