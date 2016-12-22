@@ -64,6 +64,8 @@ $aLang = array(
 'ERROR_PASSWORDS_DO_NOT_MATCH'                  => 'Passwörter stimmen nicht überein',
 'ERROR_USER_NAME_DOES_NOT_MATCH_PATTERN'        => 'Bitte geben Sie eine gültige E-Mail-Adresse ein!',
 'ERROR_MYSQL_VERSION_DOES_NOT_FIT_REQUIREMENTS' => 'Die MySQL Version erfüllt nicht die Systemvoraussetzungen',
+'ERROR_MYSQL_VERSION_DOES_NOT_FIT_RECOMMENDATIONS' => 'WARNUNG: Die installierte MySQL Version entspricht zwar den <i>minimalen</i> Anforderungen, wird aber weder empfohlen noch unterstützt.',
+
 
 'ERROR_VIEWS_CANT_CREATE'                       => 'FEHLER: Kann Views nicht erstellen. Bitte prüfen Sie Ihre Benutzerrechte für die Datenbank.',
 'ERROR_VIEWS_CANT_SELECT'                       => 'FEHLER: Kann nicht auf Views zugreifen. Bitte prüfen Sie Ihre Benutzerrechte für die Datenbank.',
@@ -86,6 +88,7 @@ $aLang = array(
 'MOD_TOKENIZER'                                 => 'Tokenizer',
 'MOD_BC_MATH'                                   => 'BCMath',
 'MOD_MYSQL_CONNECT'                             => 'PDO_MySQL',
+'MOD_MYSQL_VERSION'                             => 'MySQL Version 5.5 oder 5.7',
 'MOD_GD_INFO'                                   => 'GDlib v2 incl. JPEG Unterstützung',
 'MOD_INI_SET'                                   => 'ini_set erlaubt',
 'MOD_REGISTER_GLOBALS'                          => 'register_globals muss ausgeschaltet sein',
@@ -161,7 +164,8 @@ $aLang = array(
 'BUTTON_WRITE_DATA'                             => 'Daten jetzt speichern',
 
 'STEP_4_2_TITLE'                                => 'Datenbank - Tabellen erstellen ...',
-'STEP_4_2_OVERWRITE_DB'                         => 'Falls Sie dennoch installieren wollen und die alten Daten überschreiben, klicken Sie',
+'STEP_4_2_OVERWRITE_DB'                         => 'Falls Sie dennoch installieren wollen und die alten Daten überschreiben, klicken Sie ',
+'STEP_4_2_NOT_RECOMMENDED_MYSQL_VERSION'        => 'Falls Sie dennoch installieren wollen, klicken Sie ',
 'STEP_4_2_UPDATING_DATABASE'                    => 'Datenbank erfolgreich aktualisiert. Bitte warten ...',
 
 'STEP_5_TITLE'                                  => 'OXID eShop Lizenz',

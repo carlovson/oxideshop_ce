@@ -22,11 +22,10 @@
 
 namespace OxidEsales\EshopCommunity\Core;
 
-use OxidEsales\Eshop\Core\Database\Adapter\ResultSetInterface;
-use OxidEsales\Eshop\Core\Edition\EditionSelector;
-use oxRegistry;
-use oxDb;
 use Exception;
+use oxDb;
+use OxidEsales\Eshop\Core\Database\Adapter\ResultSetInterface;
+use oxRegistry;
 
 /**
  * System requirements class.
@@ -788,36 +787,59 @@ class SystemRequirements
     /**
      * Checks if current mysql version matches requirements
      *
-     * @param string $sVersion MySQL version
+     * @param string $installedVersion MySQL version
      *
      * @return int
      */
-    public function checkMysqlVersion($sVersion = null)
+    public function checkMysqlVersion($installedVersion = null)
     {
+        $iModStat = null;
+
         $minimalRequiredVersion = '5.5.0';
         /** All versions of 5.6 are not recommended. Please see comment below */
         $maximalRequiredVersion = '5.7.9999';
 
-        if ($sVersion === null) {
+        if ($installedVersion === null) {
             $aRez = oxDb::getDb()->getAll("SHOW VARIABLES LIKE 'version'");
             foreach ($aRez as $aRecord) {
-                $sVersion = $aRecord[1];
+                $installedVersion = $aRecord[1];
                 break;
             }
         }
 
-        $iModStat = 0;
+        /**
+         * Setup will NOT continue for MySQL versions smaller than the minimal required version,
+         * as OXID eShop will definitely not work
+         */
+        if (version_compare($installedVersion, $minimalRequiredVersion, '<')) {
+            $iModStat = 0;
+        }
         /**
          * There is a bug in MySQL 5.6,* which under certain conditions affects OXID eShop Enterprise Edition.
          * Version MySQL 5.6.* in neither recommended nor supported by OXID eSales.
          * See https://bugs.mysql.com/bug.php?id=79203
          */
-        if (version_compare($sVersion, '5.6.0', '>=') && version_compare($sVersion, '5.7.0', '<')) {
+        if (is_null($iModStat) &&
+            version_compare($installedVersion, '5.6.0', '>=') &&
+            version_compare($installedVersion, '5.7.0', '<')
+        ) {
             $iModStat = 1;
         }
-
-        if (! $iModStat && version_compare($sVersion, $minimalRequiredVersion, '>=') && version_compare($sVersion, $maximalRequiredVersion, '<=')) {
+        /**
+         * Recommended and supported MySQL versions
+         */
+        if (is_null($iModStat) &&
+            version_compare($installedVersion, $minimalRequiredVersion, '>=') &&
+            version_compare($installedVersion, $maximalRequiredVersion, '<=')
+        ) {
             $iModStat = 2;
+        }
+        /**
+         * If neither of the former conditions apply, a warning will be issued:
+         * OXID eShop MAY work, but the installed MySQL version is neither recommended nor supported.
+         */
+        if (is_null($iModStat)) {
+            $iModStat = 1;
         }
 
         return $iModStat;
