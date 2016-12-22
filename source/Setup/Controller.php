@@ -608,6 +608,19 @@ class Controller extends Core
     }
 
     /**
+     * Show a message and a link to continue installation process, not regarding errors and warnings
+     *
+     * @param View     $oView      to set parameters for template
+     * @param Language $oLang      to translate text
+     * @param string   $sSessionId
+     * @param string   $sStep      where to redirect if chose to rewrite database
+     */
+    private function formMessageInstallAnyway($oView, $oLang, $sSessionId, $sStep)
+    {
+        $oView->setMessage("<br><br>" . $oLang->getText('STEP_4_2_NOT_RECOMMENDED_MYSQL_VERSION') . " <a href=\"index.php?sid=" . $sSessionId . "&istep=" . $sStep . "&ow=1\" id=\"step3Continue\" style=\"text-decoration: underline;\">" . $oLang->getText('HERE') . "</a>");
+    }
+
+    /**
      * Check if database is up and running
      *
      * @param  Database $database
@@ -711,16 +724,5 @@ class Controller extends Core
     {
         $editionPathSelector = $this->getEditionPathProvider($edition);
         return $editionPathSelector->getDatabaseSqlDirectory();
-    }
-
-    /**
-     * @param $oView
-     * @param $oLang
-     * @param $sSessionId
-     * @param $sStep
-     */
-    protected function formMessageInstallAnyway($oView, $oLang, $sSessionId, $sStep)
-    {
-        $oView->setMessage("<br><br>" . $oLang->getText('STEP_4_2_NOT_RECOMMENDED_MYSQL_VERSION') . " <a href=\"index.php?sid=" . $sSessionId . "&istep=" . $sStep . "&ow=1\" id=\"step3Continue\" style=\"text-decoration: underline;\">" . $oLang->getText('HERE') . "</a>");
     }
 }
