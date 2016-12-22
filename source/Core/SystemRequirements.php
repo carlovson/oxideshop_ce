@@ -852,9 +852,12 @@ class SystemRequirements
      */
     public function checkGdInfo()
     {
+        /** Todo consider using gd_info() */
         $iModStat = extension_loaded('gd') ? 1 : 0;
         $iModStat = function_exists('imagecreatetruecolor') ? 2 : $iModStat;
+        $iModStat = function_exists('imagecreatefromgif') ? $iModStat : 0;
         $iModStat = function_exists('imagecreatefromjpeg') ? $iModStat : 0;
+        $iModStat = function_exists('imagecreatefrompng') ? $iModStat : 0;
 
         return $iModStat;
     }
