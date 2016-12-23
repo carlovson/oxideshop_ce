@@ -403,7 +403,7 @@ class ControllerTest extends \OxidTestCase
 
         $oSession = $this->getMock('SetupSession', array("getSessionParam", "getSid"), array(), '', null);
         $oSession->expects($this->once())->method("getSessionParam")->with($this->equalTo("aDB"));
-        $oSession->expects($this->once())->method("getSid");
+        $oSession->expects($this->any())->method("getSid")->willReturn('SESSION_ID');
 
         $oSessionToCheckIfUserDecideToOverwriteDB = $this->getMock('SetupSession', array("getSessionParam"), array(), '', null);
         $oSessionToCheckIfUserDecideToOverwriteDB->expects($this->once())->method("getSessionParam")->with($this->equalTo("blOverwrite"));

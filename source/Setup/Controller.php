@@ -284,7 +284,7 @@ class Controller extends Core
                 if (!$this->databaseCanBeOverwritten($oDb)) {
                     $this->formMessageIfDBCanBeOverwritten($aDB['dbName'], $oView, $oLang, $oSession->getSid(), $oSetup->getStep('STEP_DIRS_INFO'));
                 }
-                $this->formMessageInstallAnyway($oView, $oLang, $sSessionId, $sStep);
+                $this->formMessageInstallAnyway($oView, $oLang, $oSession->getSid(), $sStep);
 
                 return "default.php";
             } else {
@@ -353,7 +353,7 @@ class Controller extends Core
         // check if DB is already UP and running
         if (!$this->databaseCanBeOverwritten($oDb)) {
             $this->formMessageIfDBCanBeOverwritten($aDB['dbName'], $oView, $oLang, $oSession->getSid(), $oSetup->getStep('STEP_DB_CREATE'));
-            $this->formMessageInstallAnyway($oView, $oLang, $sSessionId, $sStep);
+            $this->formMessageInstallAnyway($oView, $oLang, $oSession->getSid(), $sStep);
 
             return "default.php";
         }
