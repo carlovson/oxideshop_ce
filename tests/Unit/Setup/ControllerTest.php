@@ -393,8 +393,6 @@ class ControllerTest extends \OxidTestCase
 
     /**
      * Testing controller::dbCreate()
-     *
-     * @return null
      */
     public function testDbCreateDbExists()
     {
@@ -413,7 +411,7 @@ class ControllerTest extends \OxidTestCase
 
         $oView = $this->getMock("viewStub", array("setTitle", "setMessage"));
         $oView->expects($this->once())->method("setTitle")->with($this->equalTo("STEP_4_2_TITLE"));
-        $oView->expects($this->once())->method("setMessage");
+        $oView->expects($this->any())->method("setMessage");
 
         $oUtils = $this->getMock("Utilities", array("getRequestVar"));
         $oUtils->expects($this->once())->method("getRequestVar");
