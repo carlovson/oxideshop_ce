@@ -28,7 +28,7 @@ use stdClass;
 
 /**
  * Admin article main discount manager.
- * Performs collection and updatind (on user submit) main item information.
+ * Performs collection and updating (on user submit) main item information.
  * Admin Menu: Shop Settings -> Discounts -> Main.
  */
 class DiscountMain extends \oxAdminDetails
@@ -215,6 +215,9 @@ class DiscountMain extends \oxAdminDetails
         $this->setEditObjectId($oAttr->getId());
     }
 
+    /**
+     * @return int
+     */
     public function getNextOxsort()
     {
         $shopId = oxRegistry::getConfig()->getShopId();
